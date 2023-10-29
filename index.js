@@ -23,6 +23,11 @@ start = async () => {
                     username,
                     password
                 } = req.body
+                if (password.length < 5 || password.length > 12 && username.length < 5 || username.length > 12) {
+                    return res.status(400).json({
+                        message: "Длина username и пароля должна быть не менее 5 и не больше 12 символов"
+                    })
+                }
                 const hash = await bcrypt.hash(password, 4)
                 const result = await db.all(`SELECT * FROM users WHERE username = "${username}"`)
                 if (result.length > 0) {
@@ -42,6 +47,28 @@ start = async () => {
                             });
                         }
                     });
+                }
+            })
+            app.post('/login', async (req, res) => {
+                const user = {
+                    username,
+                    password
+                } = req.body;
+                const usernam = await db.all(`SELECT * FROM users WHERE username = "${username}"`)
+                const passwor = await db.all(`SELECT * FROM users WHERE password = "${password}"`)
+                const hash = await bcrypt.hash(password, 4)
+                try {
+                    if ((usernam.length > 0) || (user.username === `${username}`) && (passwor.password === `${(hash)}`)) {
+                        return res.json({
+                            message: "Успешный вход"
+                        })
+                    } else {
+                        return res.status(400).json({
+                            message: "Ошибка логина/пароля"
+                        })
+                    }
+                } catch (e) {
+                    console.log(e)
                 }
             })
             app.listen(port, () => {
